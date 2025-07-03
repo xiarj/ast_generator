@@ -1059,6 +1059,12 @@ def add_nodes_edges(node, parent = None, edges_set = None, loop_stack = None, pr
     if isinstance(node, A.Tuple):
         label += get_label(node, potential_module_map)
         child_iter_needs = False
+    if isinstance(node, A.Set):
+        label += get_label(node, potential_module_map)
+        child_iter_needs = False
+    if isinstance(node, A.Dict):
+        label += get_label(node, potential_module_map)
+        child_iter_needs = False
 
     # 添加字段信息（排除 ctx 和空值）
     for field, value in A.iter_fields(node):
@@ -1166,10 +1172,6 @@ def get_label(node, potential_module_map=None):
     if isinstance(node, A.Constant):
         # 处理常量值
         return  repr(node.value)
-    if isinstance(node, A.List):
-        return '[' + ', '.join(get_label(value) for value in node.elts) + ']'
-    if isinstance(node, A.Tuple):
-        return '(' + ', '.join(get_label(value) for value in node.elts) + ')'
     
     if isinstance(node, A.Attribute):
         # 处理属性访问（如 obj.attr）
@@ -1218,6 +1220,15 @@ def get_label(node, potential_module_map=None):
     if isinstance(node, A.MatchOr):
         patterns = ' | '.join(get_label(pattern) for pattern in node.patterns)
         return f"MatchOr: {patterns}"
+    if isinstance(node, A.List):
+        return '[' + ', '.join(get_label(value) for value in node.elts) + ']'
+    if isinstance(node, A.Tuple):
+        return '(' + ', '.join(get_label(value) for value in node.elts) + ')'
+    if isinstance(node, A.Set):
+        return '{' + ', '.join(get_label(value) for value in node.elts) + '}'
+    if isinstance(node, A.Dict):
+        items = [f"{get_label(key)}: {get_label(value)}" for key, value in zip(node.keys, node.values)]
+        return '{' + ', '.join(items) + '}'
     # 添加其他需要处理的节点类型...
     else:
         # 默认返回类名
